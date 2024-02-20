@@ -1,0 +1,20 @@
+.error-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-top: 20px;
+  height: 60vh;
+}
+
+.error-page .error-code {
+  font-size: 150px;
+  font-weight: 600;
+  color: #00a8ff;
+}
+
+.error-page .error-text {
+  font-size: 34px;
+  font-weight: 600;
+  color: #000;
+}
