@@ -1,84 +1,77 @@
 import { useState, useEffect } from 'react';
 import './SearchByCategory.css';
-
 import { Link } from 'react-router-dom';
 
 const categoriesUrl = 'https://www.thecocktaildb.com/api/json/v1/1/list.php?c=list';
 const ingredientsUrl = 'https://www.thecocktaildb.com/api/json/v1/1/list.php?i=list';
 const alchNonAlchUrl = 'https://www.thecocktaildb.com/api/json/v1/1/list.php?a=list';
 const glassesUrl = 'https://www.thecocktaildb.com/api/json/v1/1/list.php?g=list';
+
 export default function SearchByCategory() {
   const [categories, setCategories] = useState([]);
   const [ingredient, setIngredient] = useState([]);
-  const [products, setProducts] = useState([]);
   const [alchType, setAlchType] = useState([]);
   const [glass, setGlass] = useState([]);
+  const [products, setProducts] = useState([]);
   const [closeBtn, setCloseBtn] = useState(false);
 
   useEffect(() => {
-    fetchCategories();
-    fetchIngredient();
+    fetchData();
   }, []);
 
-  // const fetchFilterUrl = async () => {
-  //   try {
-  //     const response = await fetch(categoriesUrl);
-  //     const { drinks } = await response.json();
-  //     console.log('categories', drinks);
-  //     setCategories(drinks);
-  //   } catch (error) {
-  //     console.error('Error fetching data', error);
-  //   }
-  // };
-  const fetchCategories = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch(categoriesUrl);
-      const { drinks } = await response.json();
-      console.log('categories', drinks);
-      setCategories(drinks);
+      const [categoriesResponse, ingredientResponse, alchNonAlchResponse, glassesResponse] = await Promise.all([fetch(categoriesUrl), fetch(ingredientsUrl), fetch(alchNonAlchUrl), fetch(glassesUrl)]);
+
+      const [categoriesData, ingredientData, alchNonAlchData, glassesData] = await Promise.all([
+        categoriesResponse.json(),
+        ingredientResponse.json(),
+        alchNonAlchResponse.json(),
+        glassesResponse.json(),
+      ]);
+
+      setCategories(categoriesData.drinks);
+      setIngredient(ingredientData.drinks);
+      setAlchType(alchNonAlchData.drinks);
+      setGlass(glassesData.drinks);
     } catch (error) {
       console.error('Error fetching data', error);
     }
   };
 
-  const fetchIngredient = async () => {
-    try {
-      const response = await fetch(ingredientsUrl);
-      //console.log(response);
-      const { drinks } = await response.json();
-      console.log('ingredients', drinks);
-      setIngredient(drinks);
-    } catch (error) {
-      console.error('Error fetching data', error);
-    }
-  };
-  const fetchProduct = async (category) => {
-    console.log(category);
+  const fetchProducts = async (param, type) => {
     setCloseBtn(true);
     try {
-      const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=' + category);
+      let url;
+      switch (type) {
+        case 'category':
+          url = 'https://www.thecocktaildb.com/api/json/v1/1/filter.php?c=' + param;
+          break;
+        case 'ingredient':
+          url = 'https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=' + param;
+          break;
+        case 'alchType':
+          url = 'https://www.thecocktaildb.com/api/json/v1/1/filter.php?a=' + param;
+          break;
+        case 'glass':
+          url = 'https://www.thecocktaildb.com/api/json/v1/1/filter.php?g=' + param;
+          break;
+        default:
+          break;
+      }
+      console.log('param', param, 'type', type);
+      const response = await fetch(`${url}${param}`);
       const { drinks } = await response.json();
-      console.log(drinks);
       setProducts(drinks);
     } catch (error) {
       console.log('Error fetching products', error);
     }
   };
-  const fetchProductByIngredient = async (ingredient) => {
-    console.log(ingredient);
-    setCloseBtn(true);
-    try {
-      const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/filter.php?i=' + ingredient);
-      const { drinks } = await response.json();
-      console.log(drinks);
-      setProducts(drinks);
-    } catch (error) {
-      console.log('Error fetching products', error);
-    }
-  };
+
   const closeButton = () => {
     setCloseBtn(false);
   };
+
   return (
     <>
       <div className="container search">
@@ -90,7 +83,7 @@ export default function SearchByCategory() {
             </button>
           )}
           {categories.map((category) => (
-            <button key={category.setCategories} className="categoryBtn" onClick={() => fetchProduct(category.strCategory)}>
+            <button key={category.strCategory} className="categoryBtn" onClick={() => fetchProducts(category.strCategory, 'category')}>
               {category.strCategory}
             </button>
           ))}
@@ -103,8 +96,34 @@ export default function SearchByCategory() {
             </button>
           )}
           {ingredient.map((ingredient) => (
-            <button key={ingredient.strIngredient1} className="categoryBtn" onClick={() => fetchProductByIngredient(ingredient.strIngredient1)}>
+            <button key={ingredient.strIngredient1} className="categoryBtn" onClick={() => fetchProducts(ingredient.strIngredient1, 'ingredient')}>
               {ingredient.strIngredient1}
+            </button>
+          ))}
+        </div>
+        <h2>Search by type</h2>
+        <div className="search-category">
+          {closeBtn && (
+            <button className="close category" onClick={closeButton}>
+              X
+            </button>
+          )}
+          {alchType.map((type) => (
+            <button key={type.strAlcoholic} className="categoryBtn" onClick={() => fetchProducts(type.strAlcoholic, 'alchType')}>
+              {type.strAlcoholic}
+            </button>
+          ))}
+        </div>
+        <h2>Search by glass</h2>
+        <div className="search-category">
+          {closeBtn && (
+            <button className="close category" onClick={closeButton}>
+              X
+            </button>
+          )}
+          {glass.map((glass) => (
+            <button key={glass.strGlass} className="categoryBtn" onClick={() => fetchProducts(glass.strGlass, 'glass')}>
+              {glass.strGlass}
             </button>
           ))}
         </div>
